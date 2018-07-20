@@ -125,7 +125,7 @@ void calcWeatherInfo()
 
     // Soil Moisture
     soilmoisture = getSoilMoisture();
-	soilmoisturePercentage = map(soilmoisture, 3100, 3320, 0, 100);
+    soilmoisturePercentage = map(soilmoisture, 3100, 3320, 0, 100);
 
     lux = getLux();
  }

@@ -1,12 +1,11 @@
-// This #include statement was automatically added by the Particle IDE.
 #include "application.h"
 
 #include "Devices.h"
 #include "Instruments.h"
 #include "Serial.h"
 #include "Azure.h"
+#include "Sparkfun_APDS9301.h"
 #include "ThingSpeakSend.h"
-#include "Spark-Dallas-Temperature.h"
 
 PlotBotDevice *device = new PlotBotDevice();
                         
@@ -32,17 +31,15 @@ int batteryAlert; // Variable to keep track of whether alert has been triggered
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Soil Variables
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-//Run I2C Scanner to get address of DS18B20(s)
-//(found in the Firmware folder in the Photon Weather Shield Repo)
-DeviceAddress soilThermometer = { 0x28, 0xBC, 0xC9, 0x7F, 0x08, 0x00, 0x00, 0xA2 }; //Waterproof temp sensor address
+const int      MAXRETRY          = 4;
 
-OneWire oneWire(ONE_WIRE_BUS);
-DallasTemperature soilTempSensor(&oneWire);
+DS18B20 ds18b20(soilTemperaturePin, true);
 
 double soiltempf = 0.0;
 double soiltempc = 0.0;
-double soilmoisture = 0.0;
-double soilreading = 0.0;
+int soilmoisture = 0;
+int soilmoisturePercentage = 0;
+//double soilreading = 0.0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Weather Shield Variables
@@ -61,28 +58,18 @@ double baromin = 0;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Luminosity Variables
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// instanciate a TSL2561 object with I2C address 0x39
-TSL2561 tsl(TSL2561_ADDR);
-
-// sensor related vars
-uint16_t integrationTime;
 double lux;
-uint32_t lux_int;
-bool autoGainOn;
 
-// execution control var
-bool operational;
-
-//status vars
-char tsl_status[21] = "na";
-char autoGain_s[4] = "na";
-uint8_t error_code;
-uint8_t gain_setting;
+APDS9301 apds;
+int CH0Level;
+int CH1Level;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ThingSpeak  Variables
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 TCPClient thingSpeakClient;
+
+int collectionTime;
 
 //---------------------------------------------------------------
 void setup()
@@ -90,7 +77,7 @@ void setup()
     STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
     
     // set wifi antenna to external
-    WiFi.selectAntenna(ANT_EXTERNAL);
+    //WiFi.selectAntenna(ANT_EXTERNAL);
     
     while(Time.year() <= 1970)
     {
@@ -100,34 +87,11 @@ void setup()
     }
     Time.zone(-7);
     
-    Serial.begin(57600);   // open serial over USB at 9600 baud
+    Serial.begin(115200);   // open serial over USB at 9600 baud
     
     // Find our device
     delay(5000);
     InitializeDevices();
-    const char *deviceId = System.deviceID().c_str();
-    for (int i = 1; i <= DEVICE_COUNT; i++)
-    {
-        if(strcmp(deviceId, devices[i]->DeviceId.c_str()) == 0)
-        {
-            device = new PlotBotDevice();
-            device->DeviceId                = devices[i]->DeviceId;
-            device->DeviceName              = devices[i]->DeviceName;
-            device->ZipCode                 = devices[i]->ZipCode;
-            device->Latitude                = devices[i]->Latitude;
-            device->Longitude               = devices[i]->Longitude;
-            device->Elevation               = devices[i]->Elevation;
-            device->ReportToThingSpeak      = devices[i]->ReportToThingSpeak;
-            device->ThingSpeakChannelNumber = devices[i]->ThingSpeakChannelNumber;
-            device->ThingSpeakWriteApiKey   = devices[i]->ThingSpeakWriteApiKey;
-            device->ReportToWunderground    = devices[i]->ReportToWunderground;
-            device->WundergroundPwsId       = devices[i]->WundergroundPwsId;
-            device->WundergroundPwsPassword = devices[i]->WundergroundPwsPassword;
-            device->ReportToAzure           = devices[i]->ReportToAzure;
-            device->SleepInterval           = devices[i]->SleepInterval;
-            break;
-        }
-    }
 
     // Make sure your Serial Terminal app is closed before powering your device
     // Now open your Serial Terminal, and hit any key to continue!
@@ -163,7 +127,7 @@ void setup()
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Soil Setup
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-    Particle.variable("soilmoist", &soilmoisture, DOUBLE);
+    Particle.variable("soilmoist", &soilmoisturePercentage, INT);
     Particle.variable("soiltempf", &soiltempf, DOUBLE);
     
     pinMode(soilTemperaturePin, INPUT);
@@ -172,13 +136,10 @@ void setup()
     pinMode(soilMoisturePin, INPUT);
     
     // DS18B20 initialization
-    soilTempSensor.begin();
-    soilTempSensor.setResolution(soilThermometer, TEMPERATURE_PRECISION);
-    soilreading = getSoilMoisture();       // give ourselves an initial value
-    soilmoisture = (-0.1696 + (0.000212 * soilreading)) * 100;
-    soiltempc = getSoilTemp();
-    soiltempf = (soiltempc * 9)/5 + 32;//else grab the newest, good data
-
+    //soilTempSensor.begin();
+    //4bsoilTempSensor.setResolution(soilThermometer, TEMPERATURE_PRECISION);
+    soilmoisture = getSoilMoisture();       // give ourselves an initial value
+    getSoilTemp();
     
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Weather Shield Setup
@@ -214,40 +175,25 @@ void setup()
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Luminosity Setup
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-    Particle.variable("tsl_status", tsl_status);
-    Particle.variable("intTime", integrationTime);
-    Particle.variable("gain", gain_setting);
-    Particle.variable("autoGainOn", autoGain_s);
-    Particle.variable("lux", lux);
-    Particle.variable("lux_int", lux_int);
+    Wire.begin();
     
-    //connecting to light sensor device
-    if (tsl.begin()) 
-        strcpy(tsl_status,"tsl2561 found");
-    else
-        strcpy(tsl_status,"tsl 2561 not found ");
-    Serial.println(tsl_status);
-    
-    // setting the sensor: gain x1 and 101ms integration time
-    if(!tsl.setTiming(false, 1, integrationTime))
-    {
-        error_code = tsl.getError();
-        sprintf(tsl_status, "setTimingError: %d", error_code);
-        Serial.println(tsl_status);
-    }
-    
-    if (!tsl.setPowerUp())
-    {
-        error_code = tsl.getError();
-        sprintf(tsl_status, "PowerUPError: %d", error_code);
-        Serial.println(tsl_status);
-    }
-    
-    // device initialized
-    operational = true;
-    strcpy(tsl_status,"initOK");
-    Serial.println(tsl_status);
-	
+    Serial.println("APDS-3901 found");
+
+    // APDS9301 sensor setup.
+    apds.begin(0x39);   // We're assuming you haven't changed the I2C address from the default by soldering the jumper on the back of the board.
+    apds.setGain(APDS9301::HIGH_GAIN); // Set the gain to high. 16X more sensitive than LOW_GAIN
+    apds.setIntegrationTime(APDS9301::INT_TIME_402_MS); // Set the integration time to the highest (of three) interval.
+    apds.setLowThreshold(0); // Sets the low threshold to 0, effectively disabling the low side interrupt.
+    apds.setHighThreshold(65535 ); // Sets the high threshold to 65535.  A value of 65535  will disable the interrupt
+    apds.setCyclesForInterrupt(1); // A single reading in the threshold range will cause an interrupt to trigger.
+    apds.enableInterrupt(APDS9301::INT_OFF); // Disable the interrupt.
+    apds.clearIntFlag();    
+    CH0Level = apds.readCH0Level();
+    CH1Level = apds.readCH1Level();
+    lux = apds.readLuxLevel();
+
+    Particle.variable("lux", &lux, DOUBLE);
+
 	// ThingSpeak setup
 	ThingSpeak.begin(thingSpeakClient);
 }
@@ -258,70 +204,73 @@ void loop()
     digitalWrite(ledActivityPin, HIGH);
 	delay(750);
 	digitalWrite(ledActivityPin, LOW);
+
+    Serial.printlnf("");
 	
 	int startMillis = millis();
     calcWeatherInfo();
     getBatteryInfo();
-    Serial.printlnf("%s: Elapsed collection time: %ldMS", Time.timeStr().c_str(), millis() - startMillis);
+    collectionTime =  millis() - startMillis;
+    Serial.printlnf("%s: Elapsed collection time: %ldMS", Time.timeStr().c_str(), collectionTime);
+    printBatteryInfo();
+    printWeatherInfo();
     
     bool wifiReady = WiFi.ready();
     bool cloudReady = Particle.connected();
 
-    Serial.printf("%s: ", Time.timeStr().c_str());
-    Serial.printf(" *** cloudReady: %d", cloudReady);
-    Serial.printlnf(" *** wifiReady: %d", wifiReady);
+    Serial.printf("\tcloudReady: %d, ", cloudReady);
+    Serial.printlnf("wifiReady: %d", wifiReady);
 
-    Serial.printf("Id: %s, ", device->DeviceId.c_str());
-    Serial.printf("Name: %s, ", device->DeviceName.c_str());
+    Serial.println("");
+    Serial.println("\n*** Config Data:");
+    Serial.printf("\tDeviceId: %s, ", device->DeviceId);
+    Serial.printf("Name: %s, ", device->DeviceName);
     Serial.printf("ZipCode: %ld, ", device->ZipCode);
     Serial.printf("Latitude: %lf, ", device->Latitude);
     Serial.printf("Longitude %lf, ", device->Longitude);
     Serial.printlnf("Elevation: %ld", device->Elevation);
     
-    Serial.printf("ReportToThingSpeak: %ld, ", device->ReportToThingSpeak);
+    Serial.printf("\tReportToThingSpeak: %ld, ", device->ReportToThingSpeak);
     Serial.printf("ThingSpeakChannelNumber: %lu, ", device->ThingSpeakChannelNumber);
-    Serial.printlnf("ThingSpeakWriteApiKey: %s, ", device->ThingSpeakWriteApiKey.c_str());
+    Serial.printlnf("ThingSpeakWriteApiKey: %s, ", device->ThingSpeakWriteApiKey);
     
-    Serial.printf("ReportToWunderGround: %ld, ", device->ReportToWunderground);
-    Serial.printf("WunderGroundPwsiD: %s, ", device->WundergroundPwsId.c_str());
-    Serial.printlnf("WunderGroundPassword: %s", device->WundergroundPwsPassword.c_str());
+    Serial.printf("\tReportToWunderGround: %ld, ", device->ReportToWunderground);
+    Serial.printf("WunderGroundPwsiD: %s, ", device->WundergroundPwsId);
+    Serial.printlnf("WunderGroundPassword: %s", device->WundergroundPwsPassword);
 
-    Serial.printlnf("ReportToAzure: %ld", device->ReportToAzure);
+    Serial.printlnf("\tReportToAzure: %ld", device->ReportToAzure);
     
-    Serial.printlnf("SleepInterval: %ld", device->SleepInterval);
+    Serial.printlnf("\tSleepInterval: %ld", device->SleepInterval);
     
-    if (device->ReportToWunderground == 1)
+    if (device->ReportToWunderground)
     {
-        if (wifiReady && cloudReady && strcmp("", device->WundergroundPwsId.c_str()) != 0)
+        if (wifiReady && cloudReady && strcmp("", device->WundergroundPwsId) != 0)
         {
             sendWeatherInfoToWU(device);
-            Serial.println("Reported to Wunderground");
+            Serial.println("\n\tReported to Wunderground");
         }
     }
     
-    if (device->ReportToAzure == 1)
+    if (device->ReportToAzure)
     {
         if (wifiReady && cloudReady)
         {
-            //sendConfigToAzure();
-            //sendWeatherInfoToAzure();
-            //sendBatteryInfoToAzure();
+            sendConfigToAzure();
+            sendInfoToAzure();
+            Serial.println("\n\tReported to Azure");
         }
     }
         			
-    if (device->ReportToThingSpeak == 1)
+    if (device->ReportToThingSpeak)
     {
         if (wifiReady && cloudReady && device->ThingSpeakChannelNumber > 0)
         {
             sendInfoToThingSpeak(device);
-            Serial.println("Reported to ThingSpeak");
+            Serial.println("\n\tReported to ThingSpeak");
         }
     }
     
-    printBatteryInfo();
-    printWeatherInfo();
-    
-    Serial.printlnf("%s: Elapsed processingg time: %ldMS", Time.timeStr().c_str(), millis() - startMillis);
+    Serial.printlnf("%s: Elapsed processing time: %ldMS", Time.timeStr().c_str(), millis() - startMillis);
 
     if (device->SleepInterval > 0)
     {
@@ -330,8 +279,10 @@ void loop()
         System.sleep(SLEEP_MODE_DEEP, device->SleepInterval);
         Serial.printlnf("%s: sleeping...", Time.timeStr().c_str());
     }
+    else
+        delay(5000);
     
-    Serial.begin(57600);
+    Serial.begin(115200);
 }
 //---------------------------------------------------------------
 

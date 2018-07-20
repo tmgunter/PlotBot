@@ -8,7 +8,7 @@
 #include "ThingSpeakSend.h"
 
 PlotBotDevice *device = new PlotBotDevice();
-                        
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // GPIO Pin Usage
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,20 +75,20 @@ int collectionTime;
 void setup()
 {
     STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
-    
+
     // set wifi antenna to external
     //WiFi.selectAntenna(ANT_EXTERNAL);
-    
+
     while(Time.year() <= 1970)
     {
-        Particle.syncTime();  
+        Particle.syncTime();
         Particle.process();
         delay(100);
     }
     Time.zone(-7);
-    
-    Serial.begin(115200);   // open serial over USB at 9600 baud
-    
+
+    Serial.begin(9600);   // open serial over USB at 9600 baud
+
     // Find our device
     delay(5000);
     InitializeDevices();
@@ -97,11 +97,11 @@ void setup()
     // Now open your Serial Terminal, and hit any key to continue!
     //Serial.println("Press any key to begin");
     //This line pauses the Serial port until a key is pressed
-    //while(!Serial.available()) 
+    //while(!Serial.available())
     //    Particle.process();
-    
+
     pinMode(ledActivityPin, OUTPUT);
-        
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Battery Setup
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ void setup()
 	Particle.variable("voltage", &batteryVoltage, DOUBLE);
 	Particle.variable("soc", &batterySoc, DOUBLE);
 	Particle.variable("alert", &batteryAlert, INT);
-	
+
 	// Set up the MAX17043 LiPo fuel gauge:
 	lipo.begin(); // Initialize the MAX17043 LiPo fuel gauge
 
@@ -118,29 +118,29 @@ void setup()
 
 	// We can set an interrupt to alert when the battery SoC gets too low.
 	// We can alert at anywhere between 1% - 32%:
-	lipo.setThreshold(20); // Set alert threshold to 20%. 
-	
+	lipo.setThreshold(20); // Set alert threshold to 20%.
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Luminosity Setup
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Soil Setup
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     Particle.variable("soilmoist", &soilmoisturePercentage, INT);
     Particle.variable("soiltempf", &soiltempf, DOUBLE);
-    
+
     pinMode(soilTemperaturePin, INPUT);
     pinMode(soilMoisturePowerPin, OUTPUT);
     digitalWrite(soilMoisturePowerPin, LOW);
     pinMode(soilMoisturePin, INPUT);
-    
+
     // DS18B20 initialization
     //soilTempSensor.begin();
     //4bsoilTempSensor.setResolution(soilThermometer, TEMPERATURE_PRECISION);
     soilmoisture = getSoilMoisture();       // give ourselves an initial value
     getSoilTemp();
-    
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Weather Shield Setup
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ void setup()
     Particle.variable("tempf", &tempf, DOUBLE);
     Particle.variable("baromin", &baromin, DOUBLE);
     Particle.variable("dewptf", &dewptf, DOUBLE);
-    
+
     //Initialize the I2C sensors and ping them
     sensor.begin();
 
@@ -171,12 +171,12 @@ void setup()
     //the time between data samples.
 
     sensor.enableEventFlags(); //Necessary register calls to enble temp, baro and alt
-	
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Luminosity Setup
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     Wire.begin();
-    
+
     Serial.println("APDS-3901 found");
 
     // APDS9301 sensor setup.
@@ -187,7 +187,7 @@ void setup()
     apds.setHighThreshold(65535 ); // Sets the high threshold to 65535.  A value of 65535  will disable the interrupt
     apds.setCyclesForInterrupt(1); // A single reading in the threshold range will cause an interrupt to trigger.
     apds.enableInterrupt(APDS9301::INT_OFF); // Disable the interrupt.
-    apds.clearIntFlag();    
+    apds.clearIntFlag();
     CH0Level = apds.readCH0Level();
     CH1Level = apds.readCH1Level();
     lux = apds.readLuxLevel();
@@ -200,13 +200,13 @@ void setup()
 
 //---------------------------------------------------------------
 void loop()
-{ 
+{
     digitalWrite(ledActivityPin, HIGH);
 	delay(750);
 	digitalWrite(ledActivityPin, LOW);
 
     Serial.printlnf("");
-	
+
 	int startMillis = millis();
     calcWeatherInfo();
     getBatteryInfo();
@@ -214,7 +214,7 @@ void loop()
     Serial.printlnf("%s: Elapsed collection time: %ldMS", Time.timeStr().c_str(), collectionTime);
     printBatteryInfo();
     printWeatherInfo();
-    
+
     bool wifiReady = WiFi.ready();
     bool cloudReady = Particle.connected();
 
@@ -229,19 +229,19 @@ void loop()
     Serial.printf("Latitude: %lf, ", device->Latitude);
     Serial.printf("Longitude %lf, ", device->Longitude);
     Serial.printlnf("Elevation: %ld", device->Elevation);
-    
+
     Serial.printf("\tReportToThingSpeak: %ld, ", device->ReportToThingSpeak);
     Serial.printf("ThingSpeakChannelNumber: %lu, ", device->ThingSpeakChannelNumber);
     Serial.printlnf("ThingSpeakWriteApiKey: %s, ", device->ThingSpeakWriteApiKey);
-    
+
     Serial.printf("\tReportToWunderGround: %ld, ", device->ReportToWunderground);
     Serial.printf("WunderGroundPwsiD: %s, ", device->WundergroundPwsId);
     Serial.printlnf("WunderGroundPassword: %s", device->WundergroundPwsPassword);
 
     Serial.printlnf("\tReportToAzure: %ld", device->ReportToAzure);
-    
+
     Serial.printlnf("\tSleepInterval: %ld", device->SleepInterval);
-    
+
     if (device->ReportToWunderground)
     {
         if (wifiReady && cloudReady && strcmp("", device->WundergroundPwsId) != 0)
@@ -250,7 +250,7 @@ void loop()
             Serial.println("\n\tReported to Wunderground");
         }
     }
-    
+
     if (device->ReportToAzure)
     {
         if (wifiReady && cloudReady)
@@ -260,7 +260,7 @@ void loop()
             Serial.println("\n\tReported to Azure");
         }
     }
-        			
+
     if (device->ReportToThingSpeak)
     {
         if (wifiReady && cloudReady && device->ThingSpeakChannelNumber > 0)
@@ -269,7 +269,7 @@ void loop()
             Serial.println("\n\tReported to ThingSpeak");
         }
     }
-    
+
     Serial.printlnf("%s: Elapsed processing time: %ldMS", Time.timeStr().c_str(), millis() - startMillis);
 
     if (device->SleepInterval > 0)
@@ -281,9 +281,7 @@ void loop()
     }
     else
         delay(5000);
-    
-    Serial.begin(115200);
+
+    Serial.begin(9600);
 }
 //---------------------------------------------------------------
-
-

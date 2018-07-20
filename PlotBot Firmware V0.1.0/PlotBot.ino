@@ -181,8 +181,8 @@ void setup()
 
     // APDS9301 sensor setup.
     apds.begin(0x39);   // We're assuming you haven't changed the I2C address from the default by soldering the jumper on the back of the board.
-    apds.setGain(APDS9301::HIGH_GAIN); // Set the gain to high. 16X more sensitive than LOW_GAIN
-    apds.setIntegrationTime(APDS9301::INT_TIME_402_MS); // Set the integration time to the highest (of three) interval.
+    apds.setGain(APDS9301::LOW_GAIN); // Set the gain to low. HIGH_GAIN is 16X more sensitive than LOW_GAIN
+    apds.setIntegrationTime(APDS9301::INT_TIME_101_MS); // Set the integration time to the highest (of three) interval.
     apds.setLowThreshold(0); // Sets the low threshold to 0, effectively disabling the low side interrupt.
     apds.setHighThreshold(65535 ); // Sets the high threshold to 65535.  A value of 65535  will disable the interrupt
     apds.setCyclesForInterrupt(1); // A single reading in the threshold range will cause an interrupt to trigger.

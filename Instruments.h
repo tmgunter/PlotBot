@@ -3,13 +3,17 @@
 #ifndef Instruments_h
 #define Instruments_h
 
+    #include <inttypes.h>
     #include <math.h>
-    #include <OneWire.h>
+    #include "Sparkfun_APDS9301.h"
     #include <SparkFun_Photon_Weather_Shield_Library.h>
     #include <SparkFunMAX17043.h>
-    #include "Spark-Dallas-Temperature.h"
+    #include <DS18B20.h>
     #include <tsl2561.h>
+    #include "Devices.h"
     
+    extern PlotBotDevice *device;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // GPIO variables
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,25 +21,17 @@
     extern int soilMoisturePowerPin;
     extern int soilMoisturePin;
     
-    extern bool WUNDERGROUND;
-    extern bool AZURE;
-	extern bool THINGSPEAK;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Soil Variables
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    #define ONE_WIRE_BUS D4
-    #define TEMPERATURE_PRECISION 11
-    
-    extern OneWire oneWire;
-    extern DallasTemperature soilTempSensor;
+    extern const int      MAXRETRY;
+    extern       DS18B20  ds18b20;
 
-    extern DeviceAddress soilThermometer;
-    
     extern double soiltempf;
     extern double soiltempc;
-    extern double soilmoisture;
-    extern double soilreading;
-    
+    extern int soilmoisture;
+    extern int soilmoisturePercentage;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Weather Shield Variables
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,20 +48,11 @@
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Luminosity Variables
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    extern TSL2561 tsl;
-    
-    extern uint16_t integrationTime;
     extern double lux;
-    extern uint32_t lux_int;
-    extern bool autoGainOn;
-    
-    extern bool operational;
 
-    //status vars
-    extern char tsl_status[21];
-    extern char autoGain_s[4];
-    extern uint8_t error_code;
-    extern uint8_t gain_setting;
+    extern APDS9301 apds;
+    extern int CH0Level;
+    extern int CH1Level;
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Battery Variables
@@ -73,15 +60,17 @@
     extern double batteryVoltage;
     extern double batterySoc;
     extern int batteryAlert;
+    
+    extern int collectionTime;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Function Prototypes
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    void update18B20Temp(DeviceAddress deviceAddress, double &tempC);
-    double getSoilTemp();
-    double getSoilMoisture();
+    void getSoilTemp();
+    int getSoilMoisture();
     int averageAnalogRead(int analogPin);
     void getBatteryInfo();
     double dewPoint(double celsius, double humidity);
     void calcWeatherInfo();
+    double getLux();
 #endif

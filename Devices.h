@@ -6,8 +6,8 @@
     class PlotBotDevice {
     
         public:
-            std::string     DeviceId;
-            std::string     DeviceName;
+            char            DeviceId[26];
+            char            DeviceName[50];
             unsigned long   ZipCode;
             double          Latitude;
             double          Longitude;
@@ -15,18 +15,16 @@
             
             unsigned int    ReportToThingSpeak;
             unsigned long   ThingSpeakChannelNumber;
-            std::string     ThingSpeakWriteApiKey;
+            char            ThingSpeakWriteApiKey[18];
             
             unsigned int    ReportToWunderground;
-            std::string     WundergroundPwsId;
-            std::string     WundergroundPwsPassword;
+            char            WundergroundPwsId[12];
+            char            WundergroundPwsPassword[10];
 
             unsigned int    ReportToAzure;
             
             unsigned int    SleepInterval;
     };
-    #define DEVICE_COUNT 5
-    extern std::array<PlotBotDevice *, DEVICE_COUNT> devices;
     extern PlotBotDevice *device;
     
     void InitializeDevices();

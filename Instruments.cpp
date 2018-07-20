@@ -23,26 +23,31 @@ double dewPoint(double celsius, double humidity)
 	double T = log(VP/0.61078);   // temp var
 	return (241.88 * T) / (17.558 - T);
 }
+
 //---------------------------------------------------------------
-void update18B20Temp(DeviceAddress deviceAddress, double &tempC)
+void getSoilTemp()
 {
-  tempC = soilTempSensor.getTempC(deviceAddress);
+    float _temp;
+    int   i = 0;
+
+    do 
+    {
+        _temp = ds18b20.getTemperature();
+    } while (!ds18b20.crcCheck() && MAXRETRY > i++);
+
+    if (i < MAXRETRY) {
+        soiltempc = _temp;
+        soiltempf = ds18b20.convertToFahrenheit(_temp);
+    }
+    else 
+    {
+        soiltempc = soiltempf = NAN;
+        Serial.println("Invalid soil temperature reading");
+    }
 }
 //---------------------------------------------------------------
-double getSoilTemp()
-{
-    double temp;
-    //get temp from DS18B20
-    soilTempSensor.requestTemperatures();
-    update18B20Temp(soilThermometer, temp);
-    //Every so often there is an error that throws a -127.00, this compensates
-    if(temp < -100)
-      return(soiltempc);//push last value so data isn't out of scope
-    else
-        return(temp);
-}
-//---------------------------------------------------------------
-double getSoilMoisture()
+
+int getSoilMoisture()
 {
     /*We found through testing that leaving the soil moisture sensor powered
     all the time lead to corrosion of the probes. Thus, this port breaks out
@@ -50,8 +55,8 @@ double getSoilMoisture()
     power the sensor, take a reading, and then disable power on the sensor,
     giving the sensor a longer lifespan.*/
     digitalWrite(soilMoisturePowerPin, HIGH);
-    delay(200);
-    double avgMoisture = 0.0;
+    delay(100);
+    int avgMoisture = 0;
     for (int i = 0; i < 8; i++)
         avgMoisture += analogRead(soilMoisturePin);
     delay(100);
@@ -71,73 +76,6 @@ int averageAnalogRead(int pinToRead)
 	runningValue /= numberOfReadings;
 
 	return(runningValue);
-}
-
-void getLux()
-{
-    uint16_t broadband, ir;
-
-    // update exposure settings display vars
-    if (tsl._gain)
-        gain_setting = 16;
-    else
-        gain_setting = 1;
-
-    if (autoGainOn)
-        strcpy(autoGain_s, "yes");
-    else
-        strcpy(autoGain_s, "no");
-
-    if (operational)
-    {
-        // device operational, update status vars
-        strcpy(tsl_status, "OK");
-
-        // get raw data from sensor
-        if(!tsl.getData(broadband,ir,autoGainOn))
-        {
-            error_code = tsl.getError();
-            sprintf(tsl_status, "saturated? %d", error_code);
-            operational = false;
-        }
-    
-        // compute illuminance value in lux
-        if(!tsl.getLux(integrationTime, broadband, ir, lux))
-        {
-            error_code = tsl.getError();
-            sprintf(tsl_status, "getLuxError: %d", error_code);
-            operational = false;
-        }
-    
-        // try the integer based calculation
-        if(!tsl.getLuxInt(broadband, ir, lux_int))
-        {
-            error_code = tsl.getError();
-            sprintf(tsl_status, "getLuxIntError: %d", error_code);
-            operational = false;
-        }
-
-    }
-    else
-    // device not set correctly
-    {
-        strcpy(tsl_status,"OperationError");
-        lux = -1.0;
-        // trying a fix
-        // power down the sensor
-        tsl.setPowerDown();
-        delay(100);
-        // re-init the sensor
-        if (tsl.begin())
-        {
-            // power up
-            tsl.setPowerUp();
-            // re-configure
-            tsl.setTiming(tsl._gain, 1, integrationTime);
-            // try to go back normal again
-            operational = true;
-        } 
-    }
 }
 
 void getBatteryInfo()
@@ -183,86 +121,20 @@ void calcWeatherInfo()
     dewptf = (dewptc * 9.0)/ 5.0 + 32.0;
     
     // Soil Temperature
-    //soiltempc = getSoilTemp();
-    //soiltempf = (soiltempc * 9)/5 + 32;
-    
+    getSoilTemp();
+
     // Soil Moisture
-    //soilmoisture = (-0.1696 + (0.000212 * soilreading)) * 100;
+    soilmoisture = getSoilMoisture();
+    soilmoisturePercentage = map(soilmoisture, 3251, 3300, 0, 100);
     
-    // Wind Speed
-    //float tempWindspeedmph = getWindSpeed();
-	//if (tempWindspeedmph >= 0 && tempWindspeedmph <= 75)
-	//    windspeedmph = tempWindspeedmph;
+    lux = getLux();
+ }
 
-    // Wind DIrection
-    //captureWindVane();
-    //float tempWinddir = getAndResetWindVaneDegrees();
-    //int tempWinddir = getWindDirection();
-    //if (tempWinddir != -1)
-    //    winddir = tempWinddir;
-    
-	//current winddir, current windspeed, windgustmph, and windgustdir are calculated every 100ms throughout the day
-
-	//Calc windspdmph_avg2m
-	//float temp = 0;
-	//for(int i = 0 ; i < 120 ; i++)
-	//	temp += windspdavg[i];
-	//temp /= 120.0;
-	//windspdmph_avg2m = temp;
-
-	//Calc winddir_avg2m, Wind Direction
-	//You can't just take the average. Google "mean of circular quantities" for more info
-	//We will use the Mitsuta method because it doesn't require trig functions
-	//And because it sounds cool.
-	//Based on: http://abelian.org/vlf/bearings.html
-	//Based on: http://stackoverflow.com/questions/1813483/averaging-angles-again
-	//long sum = winddiravg[0];
-	//int D = winddiravg[0];
-	//for(int i = 1 ; i < WIND_DIR_AVG_SIZE ; i++)
-	//{
-	//	int delta = winddiravg[i] - D;
-
-	//	if(delta < -180)
-	//		D += delta + 360;
-	//	else if(delta > 180)
-	//		D += delta - 360;
-	//	else
-	//		D += delta;
-
-	//	sum += D;
-	//}
-	//winddir_avg2m = sum / WIND_DIR_AVG_SIZE;
-	//if(winddir_avg2m >= 360) winddir_avg2m -= 360;
-	//if(winddir_avg2m < 0) winddir_avg2m += 360;
-
-
-	//Calc windgustmph_10m
-	//Calc windgustdir_10m
-	//Find the largest windgust in the last 10 minutes
-	//windgustmph_10m = 0;
-	//windgustdir_10m = 0;
-	////Step through the 10 minutes
-	//for(int i = 0; i < 10 ; i++)
-	//{
-	//	if(windgust_10m[i] > windgustmph_10m)
-	//	{
-	//		windgustmph_10m = windgust_10m[i];
-	//		windgustdir_10m = windgustdirection_10m[i];
-	//	}
-	//}
-
-
-	//Total rainfall for the day is calculated within the interrupt
-	//Calculate amount of rainfall for the last 60 minutes
-	//rainin = 0;
-	//for(int i = 0 ; i < 60 ; i++)
-	//	rainin += rainHour[i];
-	//dailyraininVar = dailyrainin;
-
-
-	//Calc light level
-	getLux();
-
-	//Calc battery level
-	//batt_lvl = get_battery_level();
+double getLux()
+{
+    // Luminosity
+    apds.clearIntFlag();    
+    CH0Level = apds.readCH0Level();
+    CH1Level = apds.readCH1Level();
+    lux = apds.readLuxLevel();
 }

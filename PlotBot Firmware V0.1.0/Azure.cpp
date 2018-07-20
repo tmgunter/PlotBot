@@ -26,15 +26,15 @@ void sendInfoToAzure()
 
 
     String jsonDataString =
-        "{ \"Soc\":" + String(soc_s) +
-        ",\"TempF\":" + String(tempf_s) +
-        ",\"Hum\":" + String(humidity_s) +
-        ",\"DewPtF\":" + String(dewptf_s) +
-        ",\"SoilMoist%\":" + String(soilmoisturePercentage) +
-        ",\"SoilTempF\":" + String(soiltempf_s) +
-        ",\"Lux\":" + String(lux_s) +
-        ",\"BaromIn\":" + String(baromin_s) +
-        ",\"Collectms\":" + String(collectionTime) +
+        "{ \"Soc\":\"" + String(soc_s) + "\"" +
+        ",\"TempF\":\"" + String(tempf_s) + "\"" +
+        ",\"Hum\":\"" + String(humidity_s) + "\"" +
+        ",\"DewPtF\":\"" + String(dewptf_s) + "\"" +
+        ",\"SoilMoist%\":\"" + String(soilmoisturePercentage) + "\"" +
+        ",\"SoilTempF\":\"" + String(soiltempf_s) + "\"" +
+        ",\"Lux\":\"" + String(lux_s) + "\"" +
+        ",\"BaromIn\":\"" + String(baromin_s) + "\"" +
+        ",\"Collectms\":\"" + String(collectionTime) + "\"" + 
         "}";
 
     Serial.printlnf("\n\tAzure JSON: %s", jsonDataString.c_str());

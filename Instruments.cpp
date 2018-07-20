@@ -30,7 +30,7 @@ void getSoilTemp()
     float _temp;
     int   i = 0;
 
-    do 
+    do
     {
         _temp = ds18b20.getTemperature();
     } while (!ds18b20.crcCheck() && MAXRETRY > i++);
@@ -39,7 +39,7 @@ void getSoilTemp()
         soiltempc = _temp;
         soiltempf = ds18b20.convertToFahrenheit(_temp);
     }
-    else 
+    else
     {
         soiltempc = soiltempf = NAN;
         Serial.println("Invalid soil temperature reading");
@@ -85,7 +85,7 @@ void getBatteryInfo()
 	// lipo.getSOC() returns the estimated state of charge (e.g. 79%)
 	batterySoc = lipo.getSOC();
 	// lipo.getAlert() returns a 0 or 1 (0=alert not triggered)
-	batteryAlert = (int)lipo.getAlert();    
+	batteryAlert = (int)lipo.getAlert();
 }
 
 //Calculates each of the variables that wunderground is expecting
@@ -119,21 +119,21 @@ void calcWeatherInfo()
     //Calculate Dew Point
     dewptc = dewPoint(tempc, humidity);
     dewptf = (dewptc * 9.0)/ 5.0 + 32.0;
-    
+
     // Soil Temperature
     getSoilTemp();
 
     // Soil Moisture
     soilmoisture = getSoilMoisture();
-    soilmoisturePercentage = map(soilmoisture, 3251, 3300, 0, 100);
-    
+    soilmoisturePercentage = map(soilmoisture, 3251, 3320, 0, 100);
+
     lux = getLux();
  }
 
 double getLux()
 {
     // Luminosity
-    apds.clearIntFlag();    
+    apds.clearIntFlag();
     CH0Level = apds.readCH0Level();
     CH1Level = apds.readCH1Level();
     lux = apds.readLuxLevel();

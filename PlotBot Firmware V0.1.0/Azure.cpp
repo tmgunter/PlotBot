@@ -24,6 +24,8 @@ void sendInfoToAzure()
     char baromin_s[10];
     sprintf(baromin_s, "%.2f", baromin);
 
+    char batteryVoltage_s[10];
+    sprintf(batteryVoltage_s, "%.2f", batteryVoltage);
 
     String jsonDataString =
         "{ \"Soc\":\"" + String(soc_s) + "\"" +
@@ -35,7 +37,7 @@ void sendInfoToAzure()
         ",\"Lux\":\"" + String(lux_s) + "\"" +
         ",\"BaromIn\":\"" + String(baromin_s) + "\"" +
         ",\"Collectms\":\"" + String(collectionTime) + "\"" +
-        ",\"BatVoltage\":\"" + String(batteryVoltage) + "\"" +
+        ",\"BatVoltage\":\"" + String(batteryVoltage_s) + "\"" +
         "}";
 
     Serial.printlnf("\n\tAzure JSON: %s", jsonDataString.c_str());

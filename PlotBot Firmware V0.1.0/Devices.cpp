@@ -23,7 +23,7 @@ void InitializeDevices()
 
         device->ReportToAzure                   = 1;
 
-        device->SleepInterval                   = 600;
+        device->SleepInterval                   = 300;
     }
     else if (strcmp(System.deviceID(), "45002b000a47363339343638") == 0)
     {
@@ -44,7 +44,7 @@ void InitializeDevices()
 
         device->ReportToAzure                   = 1;
 
-        device->SleepInterval                   = 60;
+        device->SleepInterval                   = 300;
     }
     else if (strcmp(System.deviceID(), "41003a000a47363339343638") == 0)
     {

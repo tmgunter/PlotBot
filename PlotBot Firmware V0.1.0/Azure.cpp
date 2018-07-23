@@ -34,7 +34,8 @@ void sendInfoToAzure()
         ",\"SoilTempF\":\"" + String(soiltempf_s) + "\"" +
         ",\"Lux\":\"" + String(lux_s) + "\"" +
         ",\"BaromIn\":\"" + String(baromin_s) + "\"" +
-        ",\"Collectms\":\"" + String(collectionTime) + "\"" + 
+        ",\"Collectms\":\"" + String(collectionTime) + "\"" +
+        ",\"BatVoltage\":\"" + String(batteryVoltage) + "\"" +
         "}";
 
     Serial.printlnf("\n\tAzure JSON: %s", jsonDataString.c_str());

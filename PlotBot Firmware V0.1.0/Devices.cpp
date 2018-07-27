@@ -23,12 +23,12 @@ void InitializeDevices()
 
         device->ReportToAzure                   = 1;
 
-        device->SleepInterval                   = 300;
+        device->SleepInterval                   = 600;
     }
     else if (strcmp(System.deviceID(), "45002b000a47363339343638") == 0)
     {
         strcpy(device->DeviceId,                "45002b000a47363339343638");
-        strcpy(device->DeviceName,              "PlotBot-98272-01");
+        strcpy(device->DeviceName,              "PlotBot-98272");
         device->ZipCode                         = 98272;
         device->Latitude                        = 47.8562834;
         device->Longitude                       = -121.966498;
@@ -44,12 +44,12 @@ void InitializeDevices()
 
         device->ReportToAzure                   = 1;
 
-        device->SleepInterval                   = 300;
+        device->SleepInterval                   = 600;
     }
     else if (strcmp(System.deviceID(), "41003a000a47363339343638") == 0)
     {
         strcpy(device->DeviceId,                "41003a000a47363339343638");
-        strcpy(device->DeviceName,              "PlotBot-98101-01");
+        strcpy(device->DeviceName,              "PlotBot-98101");
         device->ZipCode                         = 98272;
         device->Latitude                        = 47.608679;
         device->Longitude                       = -122.340316;
@@ -70,7 +70,7 @@ void InitializeDevices()
     else if (strcmp(System.deviceID(), "380046000c47363433353735") == 0)
     {
         strcpy(device->DeviceId,                "380046000c47363433353735");
-        strcpy(device->DeviceName,              "PlotBot-98391-01");
+        strcpy(device->DeviceName,              "PlotBot-98391");
         device->ZipCode                         = 98391;
         device->Latitude                        = 47.17704574;
         device->Longitude                       = -122.186505;
@@ -91,7 +91,7 @@ void InitializeDevices()
     else if (strcmp(System.deviceID(), "33002b000e47363433353735") == 0)
     {
         strcpy(device->DeviceId,                "33002b000e47363433353735");
-        strcpy(device->DeviceName,              "PlotBot-98034-01");
+        strcpy(device->DeviceName,              "PlotBot-98034");
         device->ZipCode                         = 98034;
         device->Latitude                        = 47.704943;
         device->Longitude                       = -122.215524;

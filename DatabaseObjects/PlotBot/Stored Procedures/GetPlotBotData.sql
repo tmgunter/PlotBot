@@ -7,15 +7,15 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
---DECLARE @FahrOrCelcius varchar(1) = 'F'
---DECLARE @OffsetFromUTC int = -7
---DECLARE @Interval int = -48
+DECLARE @FahrOrCelcius varchar(1) = 'F'
+DECLARE @OffsetFromUTC int = -7
+DECLARE @Interval int = -48
 
-CREATE PROCEDURE [dbo].[GetPlotBotData]
-@FahrOrCelcius varchar(1) = 'F',
-@OffsetFromUTC int = -7,
-@Interval int = -48
-AS
+--CREATE PROCEDURE [dbo].[GetPlotBotData]
+--	@FahrOrCelcius varchar(1) = 'F',
+--	@OffsetFromUTC int = -7,
+--	@Interval int = -48
+--AS
 BEGIN
 
 SELECT 
@@ -25,15 +25,15 @@ SELECT
 	pdb.BatVoltage,
 	CASE
 		WHEN @FahrOrCelcius = 'F' THEN 
-			pdb.TempF 
+			CAST(ROUND(pdb.TempF, 2) AS float)
 		ELSE
-			(pdb.TempF - 32) * (5 / 9) 
-	END as Temp,
+			ROUND (CAST( (pdb.tempf - 32.0) * (5.0 / 9.0) AS float), 2) 
+	END AS Temp,
 	CASE
 		WHEN @FahrOrCelcius = 'F' THEN 
 			pdb.DewPtF 
 		ELSE
-			(pdb.DewPtF - 32) * (5 / 9) 
+			ROUND (CAST( (pdb.DewPtF - 32.0) * (5.0 / 9.0) AS float), 2) 
 	END as DewPt,
 	pdb.Hum AS Hum,
 	pdb.SoilMoistPercent AS SoilMoistPercent,
@@ -41,7 +41,7 @@ SELECT
 		WHEN @FahrOrCelcius = 'F' THEN 
 			pdb.SoilTempF 
 		ELSE
-			(pdb.SoilTempF - 32) * (5 / 9) 
+			ROUND (CAST( (pdb.SoilTempF - 32.0) * (5.0 / 9.0) AS float), 2) 
 	END as SoilTemp,
 	pdb.Lux AS Lux,
 	pdb.BaromIn AS BaromIn,

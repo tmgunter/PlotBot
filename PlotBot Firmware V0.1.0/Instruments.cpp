@@ -68,11 +68,10 @@ int getSoilMoisture()
 
 double getSoilMoisturePercent(int soilMoist)
 {
-	if (soilMoist < 3000)
-		soilMoist = 3000;
-	else if (soilMoist > 3300)
-		soilMoist = NAN;
-	return map(soilMoist, 3000, 3320, 0, 100);
+	if (soilMoist < 3000 || soilMoist > 3300)
+		return NAN;
+	else
+		return map(soilMoist, 3000, 3300, 0, 100);
 }
 
 //Takes ananalogRawerage of readings on a given pin

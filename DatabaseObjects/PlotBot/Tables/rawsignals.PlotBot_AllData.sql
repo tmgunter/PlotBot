@@ -6,10 +6,10 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [rawsignals].[PlotBot_AllData](
-	[device_id] [nvarchar](100) NULL,
+	[device_id] [nvarchar](100) NOT NULL,
 	[event_name] [nvarchar](50) NULL,
 	[published_at] [datetime] NULL,
-	[EventProcessedUtcTime] [datetime] NULL,
+	[EventProcessedUtcTime] [datetime] NOT NULL,
 	[EventEnqueuedUtcTime] [datetime] NULL,
 	[Soc] [float] NULL,
 	[TempF] [float] NULL,
@@ -22,6 +22,7 @@ CREATE TABLE [rawsignals].[PlotBot_AllData](
 	[Collectms] [bigint] NULL,
 	[full_json] [nvarchar](500) NULL,
 	[BatVoltage] [float] NULL
+	CONSTRAINT PK_DeviceId_EventProcessedUtcTime PRIMARY KEY ([device_id], [published_at])
 ) ON [PRIMARY]
 GO
 

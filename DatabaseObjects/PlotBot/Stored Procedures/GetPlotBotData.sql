@@ -1,25 +1,24 @@
-USE PlotBot
-GO
-
+/****** Object:  StoredProcedure [dbo].[GetPlotBotData]    Script Date: 8/1/2018 2:21:25 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-DECLARE @FahrOrCelcius varchar(1) = 'F'
-DECLARE @OffsetFromUTC int = -7
-DECLARE @Interval int = -48
 
---CREATE PROCEDURE [dbo].[GetPlotBotData]
---	@FahrOrCelcius varchar(1) = 'F',
---	@OffsetFromUTC int = -7,
---	@Interval int = -48
---AS
+--DECLARE @FahrOrCelcius varchar(1) = 'F'
+--DECLARE @OffsetFromUTC int = -7
+--DECLARE @Interval int = -48
+
+ALTER PROCEDURE [dbo].[GetPlotBotData]
+	@FahrOrCelcius varchar(1) = 'F',
+	@OffsetFromUTC int = -7,
+	@Interval int = -48
+AS
 BEGIN
 
 SELECT 
-	DATEADD(HH, @Interval, pdb.published_at) AS LocalTime,
+	DATEADD(HH, @OffsetFromUTC, pdb.published_at) AS LocalTime,
 	d.DeviceName,
 	pdb.Soc,
 	pdb.BatVoltage,

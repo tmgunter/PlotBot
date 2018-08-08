@@ -1,4 +1,4 @@
-/****** Object:  Table [dbo].[Devices]    Script Date: 7/30/2018 10:59:30 PM ******/
+/****** Object:  Table [dbo].[Devices]    Script Date: 8/3/2018 6:04:06 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -8,9 +8,9 @@ GO
 CREATE TABLE [dbo].[Devices](
 	[Id] [bigint] IDENTITY(1,1) NOT NULL,
 	[IsActive] [bit] NULL,
-	[DeviceId] [nvarchar](50) NULL,
+	[DeviceId] [nvarchar](50) NOT NULL,
 	[DeviceName] [nvarchar](50) NULL,
-	[ZipCode] [bigint] NULL,
+	[ZipCode] [bigint] NOT NULL,
 	[Latitude] [float] NULL,
 	[Longitude] [float] NULL,
 	[Elevation] [int] NULL,
@@ -24,9 +24,8 @@ CREATE TABLE [dbo].[Devices](
 	[SleepInterval] [int] NULL,
 PRIMARY KEY CLUSTERED 
 (
-	[Id] ASC
+	[DeviceId] ASC
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-
 

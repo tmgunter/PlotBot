@@ -8,6 +8,7 @@ GO
 CREATE VIEW [dbo].[RecentPlotBotDataF]
 AS
 SELECT
+	d.DeviceId,
 	DATEADD(HH, - 7, pdb.published_at) AS LocalTime, 
 	d.DeviceName, 
 	pdb.Soc, 

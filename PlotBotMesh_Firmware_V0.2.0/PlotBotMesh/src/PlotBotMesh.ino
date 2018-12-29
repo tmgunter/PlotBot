@@ -4,14 +4,16 @@
 #include "Devices.h"
 #include "Instruments.h"
 #include "Serial.h"
+#include "Azure.h"
 
 PlotBotDevice *device = new PlotBotDevice();
 bool 		bTime = true;
 int 		ledActivityPin = D7;
 unsigned	startMillis;
 char		version[10] = "0.2.0";
-
-float battvolt = 0.0;
+unsigned	displayDelay = 5000;
+char 		localTime[30];
+float 		battvolt = 0.0;
 
 #ifdef SSD1306_128x32x
     #include <SSD1306_128x32.h>
@@ -46,18 +48,19 @@ float battvolt = 0.0;
 	#define DIO D3
 	uint8_t data[] = { 0xff, 0xff, 0xff, 0xff };
 	TM1637Display displayTime(CLK, DIO);
-	unsigned displayDelay = 5000;
 #endif
 
 #ifdef CHAINABLE_LED
 	#include "ChainableLED.h"
+
 	#define NUM_LEDS 1
 	ChainableLED leds(4, 5, NUM_LEDS);
 	float hue = 0.0;
 	boolean up = true;
 #endif
     
-void setup() {
+void setup() 
+{
     STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
 
     #if PLATFORM_ID == PLATFORM_ARGON
@@ -81,63 +84,74 @@ void setup() {
     delay(5000);
     InitializeDevices();
     
-// Make sure your Serial Terminal app is closed before powering your device
-// Now open your Serial Terminal, and hit any key to continue!
-//  Serial.println("Press any key to begin");
-// This line pauses the Serial port until a key is pressed
-//  while(!Serial.available()) 
-//      Particle.process();
+	// Make sure your Serial Terminal app is closed before powering your device
+	// Now open your Serial Terminal, and hit any key to continue!
+	//  Serial.println("Press any key to begin");
+	// This line pauses the Serial port until a key is pressed
+	//  while(!Serial.available()) 
+	//      Particle.process();
 
     pinMode(ledActivityPin, OUTPUT);
 	pinMode(BATT, INPUT);
 
-#ifdef DHT11
-    // Create Particle.variables for each piece of data for easy access
-    dht.begin();
-    Particle.variable("humidity", (double)humidity);
-    Particle.variable("tempf", (double)tempf);
-    Particle.variable("dewptf", (double)dewptf);
-	Particle.variable("battvolt", (double)battvolt);
-#endif
+	#ifdef DHT11
+		// Create Particle.variables for each piece of data for easy access
+		dht.begin();
+		Particle.variable("humidity", (double)humidity);
+		Particle.variable("tempf", (double)tempf);
+		Particle.variable("dewptf", (double)dewptf);
+		Particle.variable("battvolt", (double)battvolt);
+	#endif
     
-#ifdef TM1637Displayx
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 4-digit display
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    displayTime.setBrightness(0xff); //set the diplay to maximum brightness
-    //displayTime.setBrightness(0x0a); //not so bright
+	#ifdef TM1637Displayx
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		// 4-digit display
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		//displayTime.setBrightness(0xff); //set the diplay to maximum brightness
+		displayTime.setBrightness(0x0a); //not so bright
 
-    // Set center colon on without array - Start
-    uint8_t segto;
-    int value = 1244;
-    segto = 0x80 | displayTime.encodeDigit((value / 100) % 10); // And off will be without this 0x80 bit set
-    displayTime.setSegments(&segto, 1, 1);
-#endif
+		// Set center colon on without array - Start
+		uint8_t segto;
+		int value = 1244;
+		segto = 0x80 | displayTime.encodeDigit((value / 100) % 10); // And off will be without this 0x80 bit set
+		displayTime.setSegments(&segto, 1, 1);
+	#endif
     
-#ifdef SSD1306_128x32x
-	Serial.println("OLED FeatherWing");
-	// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-	display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
-	Serial.println("OLED begun");
+	#ifdef SSD1306_128x32x
+		Serial.println("OLED FeatherWing");
+		// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+		display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
+		Serial.println("OLED begun");
 
-	// Clear the buffer.
-	display.clearDisplay();
-	display.display();
+		// Clear the buffer.
+		display.clearDisplay();
+		display.display();
 
-	pinMode(BUTTON_A, INPUT_PULLUP);
-	pinMode(BUTTON_B, INPUT_PULLUP);
-	pinMode(BUTTON_C, INPUT_PULLUP);
-#endif
+		pinMode(BUTTON_A, INPUT_PULLUP);
+		pinMode(BUTTON_B, INPUT_PULLUP);
+		pinMode(BUTTON_C, INPUT_PULLUP);
+	#endif
 
-#ifdef CHAINABLE_LED
-	leds.init();
-#endif
+	#ifdef CHAINABLE_LED
+		leds.init();
+	#endif
 }
 
-void loop() {
+void loop() 
+{
 	digitalWrite(ledActivityPin, HIGH);
 	delay(250);
 	digitalWrite(ledActivityPin, LOW);
+
+	int h = Time.hourFormat12();
+	int m = Time.minute();
+	int s = Time.second();
+	char ampm[5];
+	if (Time.isAM())
+		strcpy(ampm, "am");
+	else
+		strcpy(ampm, "pm");
+	sprintf(localTime, "%02d/%02d/%02d %02d:%02d:%02d%s", Time.month(), Time.day(), Time.year(), h, m, s, ampm);
 
 	if ((unsigned)(millis() - startMillis) > displayDelay)
 	{
@@ -149,26 +163,12 @@ void loop() {
 			Serial.printlnf("PlotBot SensorNode (Xenon) V%s", version);
 		#endif
 
-		int h = Time.hourFormat12();
-    	int m = Time.minute();
-    	int s = Time.second();
-		char ampm[5];
-		if (Time.isAM())
-			strcpy(ampm, "am");
-		else
-			strcpy(ampm, "pm");
-		char localTime[15];
-		sprintf(localTime, "%02d/%02d/%02d %02d:%02d:%02d%s", Time.month(), Time.day(), Time.year(), h, m, s, ampm);
-
-		bool cloudReady = Particle.connected();
-		Serial.printf("\n%s\tcloudReady: %d, ", localTime, cloudReady);
-
+		Serial.printf("\n%s\tcloudReady: %d, ", localTime, Particle.connected());
 		#if PLATFORM_ID == PLATFORM_ARGON
-			bool wifiReady = WiFi.ready();
-			Serial.printlnf("wifiReady: %d", wifiReady);
+			Serial.printf("wifiReady: %d, ", WiFi.ready());
+			Serial.printlnf("meshReady: %d", Mesh.ready());
 		#elif PLATFORM_ID == PLATFORM_XENON
-			bool meshReady = Mesh.ready();
-			Serial.printlnf("meshReady: %d", meshReady);
+			Serial.printlnf("meshReady: %d", Mesh.ready());
 		#endif
 
 		Serial.println("\n*** Config Data:");
@@ -215,46 +215,52 @@ void loop() {
 				#endif
 				bTime = true;
 			}
-			startMillis = millis();
 		#endif
+
+		#ifdef SSD1306_128x32x
+			display.clearDisplay();
+			display.display();
+			display.setTextSize(2);
+			display.setTextColor(WHITE);
+			display.setCursor(0, 0);
+			char displayStr[100];
+			sprintf(displayStr, "T:%02d:%02d:%02d", h, m, s);
+			switch (button)
+			{
+				case 1:
+					sprintf(displayStr, "%sButton A", displayStr);
+					break;
+					
+				case 2:
+					sprintf(displayStr, "%sButton B", displayStr);
+					break;
+					
+				case 3:
+					sprintf(displayStr, "%sButton C", displayStr);        
+					break;
+			}
+			display.println(displayStr);
+			display.setCursor(0,0);
+			display.display(); // actually display all of the above
+
+			if(digitalRead(BUTTON_A) == LOW) {
+				button = 1;
+			}
+			if(digitalRead(BUTTON_B) == LOW) {
+				button = 2;
+			}
+				if(digitalRead(BUTTON_C) == LOW) {
+				button = 3;
+			}
+		#endif  
+
+		if (device->ReportToAzure == 1)
+			sendInfoToAzure();
+
+		startMillis = millis();
 	}
 
-	#ifdef SSD1306_128x32x
-		display.clearDisplay();
-		display.display();
-		display.setTextSize(2);
-		display.setTextColor(WHITE);
-		display.setCursor(0, 0);
-		char displayStr[100];
-		sprintf(displayStr, "T:%02d:%02d:%02d", h, m, s);
-		switch (button)
-		{
-			case 1:
-				sprintf(displayStr, "%sButton A", displayStr);
-				break;
-				
-			case 2:
-				sprintf(displayStr, "%sButton B", displayStr);
-				break;
-				
-			case 3:
-				sprintf(displayStr, "%sButton C", displayStr);        
-				break;
-		}
-		display.println(displayStr);
-		display.setCursor(0,0);
-		display.display(); // actually display all of the above
 
-		if(digitalRead(BUTTON_A) == LOW) {
-			button = 1;
-		}
-		if(digitalRead(BUTTON_B) == LOW) {
-			button = 2;
-		}
-			if(digitalRead(BUTTON_C) == LOW) {
-			button = 3;
-		}
-	#endif  
 
 #ifdef CHAINABLE_LED
 	for (byte i = 0; i < NUM_LEDS; i++)

@@ -23,7 +23,7 @@ void InitializeDevices()
         strcpy(device->WundergroundPwsId,       "KWAMONRO71");
         strcpy(device->WundergroundPwsPassword, "k3mjjpq6");
 
-        device->ReportToAzure                   = 0;
+        device->ReportToAzure                   = 1;
 
         device->SleepInterval                   = 0;
     }
@@ -44,7 +44,7 @@ void InitializeDevices()
         strcpy(device->WundergroundPwsId,       "KWAMONRO84");
         strcpy(device->WundergroundPwsPassword, "rzftmbdm");
 
-        device->ReportToAzure                   = 0;
+        device->ReportToAzure                   = 1;
 
         device->SleepInterval                   = 0;
     }

@@ -1,4 +1,5 @@
 #include "PlotBotMesh.h"
+#include "Devices.h"
 
 #ifndef Instruments_h
 #define Instruments_h
@@ -15,7 +16,9 @@
         extern double dewptc;
     #endif
 
-    extern float battvolt;
+    extern float            battvolt;
+    extern char             localTime[];
+    extern PlotBotDevice    *device;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Function Prototypes

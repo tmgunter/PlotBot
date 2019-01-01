@@ -47,7 +47,7 @@ void sendWeatherInfoToWU(PlotBotDevice *device)
         request.port = 80;
         request.path = WEBPAGE;
         
-        sprintf(URL, "%s?ID=%s&PASSWORD=%s&action=updateraw&dateutc=now&realtime=1&rtfreq=6", WEBPAGE, device->WundergroundPwsId, device->WundergroundPwsPassword);
+        sprintf(URL, "%s?ID=%s&PASSWORD=%s&action=updateraw&dateutc=now&realtime=1&rtfreq=6", WEBPAGE, device->WundergroundPwsId.c_str(), device->WundergroundPwsPassword.c_str());
     #ifdef DHT11
         sprintf(URL, "%s&humidity=%.2f", URL, humidity);
         sprintf(URL, "%s&dewptf=%.2f", URL, dewptf);
@@ -80,7 +80,7 @@ void printWeatherInfo()
     #ifdef DHT11
         //This function prints the weather data out to the default Serial Port
         Serial.println("\n*** Sensor Data:");
-        if (tempf != NAN && humidity != NAN)
+        if ((int)tempf != 32 && (int)humidity != 0)
         {
             Serial.printf("\ttempf: %.2fF, ", tempf);
             Serial.printf("dewptf: %.2fF, ", dewptf);

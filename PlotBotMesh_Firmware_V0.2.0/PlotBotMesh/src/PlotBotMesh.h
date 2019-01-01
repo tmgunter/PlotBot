@@ -1,4 +1,10 @@
+#ifndef PlotBotMesh_h
+#define PlotBotMesh_h
     #include "application.h"
+    #include "Devices.h"
+
+    #include <math.h>
+    #include <map>
 
     #if PLATFORM_ID == PLATFORM_ARGON
         #define SSD1306_128x32x
@@ -12,3 +18,12 @@
         #undef CHAINABLE_LED
     #endif
 
+    #define FLEET_SIZE 10
+    extern std::map<std::string, PlotBotDevice*> fleet;
+    extern PlotBotDevice *device;
+    extern std::map<std::string, std::string> events;
+
+    #define BUTTON_A  4
+    #define BUTTON_B  3
+    #define BUTTON_C  2
+#endif

@@ -7,6 +7,7 @@
 #include "Azure.h"
 
 PlotBotDevice *device = new PlotBotDevice();
+
 bool 		bTime = true;
 int 		ledActivityPin = D7;
 unsigned	startMillis;
@@ -15,16 +16,17 @@ unsigned	displayDelay = 5000;
 char 		localTime[30];
 float 		battvolt = 0.0;
 
+std::map<std::string, PlotBotDevice*> fleet;
+std::map<std::string, std::string> events; 
+
 #ifdef SSD1306_128x32x
-    #include <SSD1306_128x32.h>
+	#include <SSD1306_128x32.h>
 
 	#define OLED_RESET D4
 	SSD1306_128x32 display(OLED_RESET);
-	int button = 2;
 
-	#define BUTTON_A  4
-	#define BUTTON_B  3
-	#define BUTTON_C  2
+	int button = 1;
+	int newbutton = 1;
 #endif
 
 #ifdef DHT11
@@ -65,9 +67,11 @@ void setup()
 
     #if PLATFORM_ID == PLATFORM_ARGON
         WiFi.selectAntenna(ANT_EXTERNAL);
+		Mesh.subscribe("XenonData", XenonDataHandler);
     #endif
     #if PLATFORM_ID == PLATFORM_XENON
         //Mesh.selectAntenna(ANT_EXTERNAL);
+		Mesh.subscribe("ArgonData", ArgonDataHandler);
     #endif
     
     while(Time.year() <= 1970)
@@ -153,8 +157,25 @@ void loop()
 		strcpy(ampm, "pm");
 	sprintf(localTime, "%02d/%02d/%02d %02d:%02d:%02d%s", Time.month(), Time.day(), Time.year(), h, m, s, ampm);
 
+	#ifdef SSD1306_128x32x
+	if(digitalRead(BUTTON_A) == LOW)
+		button = 1;
+	if(digitalRead(BUTTON_B) == LOW)
+		button = 2;
+	if(digitalRead(BUTTON_C) == LOW)
+		button = 3;
+	#endif
+
+	#if PLATFORM_ID == PLATFORM_ARGON
+	if (((unsigned)(millis() - startMillis) > displayDelay) || (button != newbutton))
+	#elif PLATFORM_ID == PLATFORM_XENON
 	if ((unsigned)(millis() - startMillis) > displayDelay)
+	#endif
 	{
+		#ifdef SSD1306_128x32x
+			button = newbutton;
+		#endif
+
 		Serial.printlnf("");
 		#if PLATFORM_ID == PLATFORM_ARGON
 			Serial.printlnf("PlotBot ControlNode (Argon) V%s", version);
@@ -172,8 +193,8 @@ void loop()
 		#endif
 
 		Serial.println("\n*** Config Data:");
-		Serial.printf("\tDeviceId: %s, ", device->DeviceId);
-		Serial.printf("Name: %s, ", device->DeviceName);
+		Serial.printf("\tDeviceId: %s, ", device->DeviceId.c_str());
+		Serial.printf("Name: %s, ", device->DeviceName.c_str());
 		Serial.printlnf("ZipCode: %ld", device->ZipCode);
 
 		Serial.printf("\tLatitude: %lf, ", device->Latitude);
@@ -182,15 +203,17 @@ void loop()
 
 		Serial.printf("\tReportToThingSpeak: %ld, ", device->ReportToThingSpeak);
 		Serial.printf("ThingSpeakChannelNumber: %lu, ", device->ThingSpeakChannelNumber);
-		Serial.printlnf("ThingSpeakWriteApiKey: %s, ", device->ThingSpeakWriteApiKey);
+		Serial.printlnf("ThingSpeakWriteApiKey: %s, ", device->ThingSpeakWriteApiKey.c_str());
 
 		Serial.printf("\tReportToWunderGround: %ld, ", device->ReportToWunderground);
-		Serial.printf("WunderGroundPwsiD: %s, ", device->WundergroundPwsId);
-		Serial.printlnf("WunderGroundPassword: %s", device->WundergroundPwsPassword);
+		Serial.printf("WunderGroundPwsiD: %s, ", device->WundergroundPwsId.c_str());
+		Serial.printlnf("WunderGroundPassword: %s", device->WundergroundPwsPassword.c_str());
 
 		Serial.printlnf("\tReportToAzure: %ld", device->ReportToAzure);
 
 		Serial.printlnf("\tSleepInterval: %ld", device->SleepInterval);
+
+		Serial.printlnf("\tButton: %ld", device->Button);
 
 		calcBatteryInfo();
 		printBatteryInfo();
@@ -242,16 +265,6 @@ void loop()
 			display.println(displayStr);
 			display.setCursor(0,0);
 			display.display(); // actually display all of the above
-
-			if(digitalRead(BUTTON_A) == LOW) {
-				button = 1;
-			}
-			if(digitalRead(BUTTON_B) == LOW) {
-				button = 2;
-			}
-				if(digitalRead(BUTTON_C) == LOW) {
-				button = 3;
-			}
 		#endif  
 
 		if (device->ReportToAzure == 1)
@@ -259,8 +272,6 @@ void loop()
 
 		startMillis = millis();
 	}
-
-
 
 #ifdef CHAINABLE_LED
 	for (byte i = 0; i < NUM_LEDS; i++)
@@ -290,4 +301,10 @@ void loop()
 		delay(0000);
       
 	Serial.begin(115200);
+}
+
+
+void DisplayEventData(int button)
+{
+
 }

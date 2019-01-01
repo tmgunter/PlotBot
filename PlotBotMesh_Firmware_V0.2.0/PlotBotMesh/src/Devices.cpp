@@ -3,70 +3,83 @@
 
 #include "Devices.h"
 
+PlotBotDevice devices[FLEET_SIZE];
+
 void InitializeDevices()
 {
-    device = new PlotBotDevice();
+        PlotBotDevice* _device = new PlotBotDevice();
+        _device->DeviceId                   = "e00fce68930b9e15c7b8139f";
+        _device->DeviceName                 = "Rain-Argon";
+        _device->ZipCode                    = 98272;
+        _device->Latitude                   = 47.8562834;
+        _device->Longitude                  = -121.966498;
+        _device->Elevation                  = 69;
+
+        _device->ReportToThingSpeak         = 0;
+        _device->ThingSpeakChannelNumber    = 453149;
+        _device->ThingSpeakWriteApiKey      = "AFVCJ483S6L1SVM4";
+
+        _device->ReportToWunderground       = 0;
+        _device->WundergroundPwsId          = "KWAMONRO71";
+        _device->WundergroundPwsPassword    = "k3mjjpq6";
+
+        _device->ReportToAzure              = 1;
+
+        _device->SleepInterval              = 0;
+
+        _device->Button                     = BUTTON_A;
+        fleet[_device->DeviceId]            = _device;
+
+        _device = new PlotBotDevice();
+        _device->DeviceId                   = "e00fce68c8e53c3766e107c9";
+        _device->DeviceName                 = "Rain-Xenon-1";
+        _device->ZipCode                    = 98272;
+        _device->Latitude                   = 47.8562834;
+        _device->Longitude                  = -121.966498;
+        _device->Elevation                  = 69;
+
+        _device->ReportToThingSpeak         = 0;
+        _device->ThingSpeakChannelNumber    = 524783;
+        _device->ThingSpeakWriteApiKey      = "0IBB8Y0SGUYV6AET";
+
+        _device->ReportToWunderground       = 0;
+        _device->WundergroundPwsId          = "KWAMONRO84";
+        _device->WundergroundPwsPassword    = "rzftmbdm";
+
+        _device->ReportToAzure              = 1;
+
+        _device->SleepInterval              = 0;
+        
+        _device->Button                     = BUTTON_B;
+        fleet[_device->DeviceId]            = _device;
+    
+        _device = new PlotBotDevice();
+        _device->DeviceId                   = "e00fce683c178a3e19c2a424";
+        _device->DeviceName                 = "Rain-Xenon-2";
+        _device->ZipCode                    = 98272;
+        _device->Latitude                   = 47.8562834;
+        _device->Longitude                  = -121.966498;
+        _device->Elevation                  = 69;
+
+        _device->ReportToThingSpeak         = 0;
+        _device->ThingSpeakChannelNumber    = 524784;
+        _device->ThingSpeakWriteApiKey      = "K3BZQFY4H8WIG5OS";
+
+        _device->ReportToWunderground       = 0;
+        _device->WundergroundPwsId          = "";
+        _device->WundergroundPwsPassword    = "";
+
+        _device->ReportToAzure              = 1;
+
+        _device->SleepInterval              = 0;
+        
+        _device->Button                     = BUTTON_C;
+        fleet[_device->DeviceId]            = _device;
+
     if (strcmp(System.deviceID(), "e00fce68930b9e15c7b8139f") == 0)
-    {
-        strcpy(device->DeviceId,                "e00fce68930b9e15c7b8139f");
-        strcpy(device->DeviceName,              "PlotBot-Argon");
-        device->ZipCode                         = 98272;
-        device->Latitude                        = 47.8562834;
-        device->Longitude                       = -121.966498;
-        device->Elevation                       = 69;
-
-        device->ReportToThingSpeak              = 0;
-        device->ThingSpeakChannelNumber         = 453149;
-        strcpy(device->ThingSpeakWriteApiKey,   "AFVCJ483S6L1SVM4");
-
-        device->ReportToWunderground            = 0;
-        strcpy(device->WundergroundPwsId,       "KWAMONRO71");
-        strcpy(device->WundergroundPwsPassword, "k3mjjpq6");
-
-        device->ReportToAzure                   = 1;
-
-        device->SleepInterval                   = 0;
-    }
+        device = fleet[(std::string)System.deviceID()];
     else if (strcmp(System.deviceID(), "e00fce68c8e53c3766e107c9") == 0)
-    {
-        strcpy(device->DeviceId,                "e00fce68c8e53c3766e107c9");
-        strcpy(device->DeviceName,              "PlotBot-Xenon-1");
-        device->ZipCode                         = 98272;
-        device->Latitude                        = 47.8562834;
-        device->Longitude                       = -121.966498;
-        device->Elevation                       = 69;
-
-        device->ReportToThingSpeak              = 0;
-        device->ThingSpeakChannelNumber         = 524783;
-        strcpy(device->ThingSpeakWriteApiKey,   "0IBB8Y0SGUYV6AET");
-
-        device->ReportToWunderground            = 0;
-        strcpy(device->WundergroundPwsId,       "KWAMONRO84");
-        strcpy(device->WundergroundPwsPassword, "rzftmbdm");
-
-        device->ReportToAzure                   = 1;
-
-        device->SleepInterval                   = 0;
-    }
+        device = fleet[(std::string)System.deviceID()];
     else if (strcmp(System.deviceID(), "e00fce683c178a3e19c2a424") == 0)
-    {
-        strcpy(device->DeviceId,                "e00fce683c178a3e19c2a424");
-        strcpy(device->DeviceName,              "PlotBot-Xenon-2");
-        device->ZipCode                         = 98272;
-        device->Latitude                        = 47.8562834;
-        device->Longitude                       = -121.966498;
-        device->Elevation                       = 69;
-
-        device->ReportToThingSpeak              = 0;
-        device->ThingSpeakChannelNumber         = 524784;
-        strcpy(device->ThingSpeakWriteApiKey,   "K3BZQFY4H8WIG5OS");
-
-        device->ReportToWunderground            = 0;
-        strcpy(device->WundergroundPwsId,       "");
-        strcpy(device->WundergroundPwsPassword, "");
-
-        device->ReportToAzure                   = 1;
-
-        device->SleepInterval                   = 0;
-    }
+        device = fleet[(std::string)System.deviceID()];
 }

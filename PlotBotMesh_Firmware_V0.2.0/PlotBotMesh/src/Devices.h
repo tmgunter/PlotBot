@@ -4,8 +4,9 @@
     class PlotBotDevice {
     
         public:
-            std::string     DeviceId;
-            std::string     DeviceName;
+            int             NodeType;
+            String          DeviceId;
+            String          DeviceName;
             unsigned long   ZipCode;
             double          Latitude;
             double          Longitude;
@@ -13,13 +14,13 @@
             
             unsigned int    ReportToThingSpeak;
             unsigned long   ThingSpeakChannelNumber;
-            std::string     ThingSpeakWriteApiKey;
+            String          ThingSpeakWriteApiKey;
             
             unsigned int    ReportToWunderground;
-            std::string     WundergroundPwsId;
-            std::string     WundergroundPwsPassword;
+            String          WundergroundPwsId;
+            String          WundergroundPwsPassword;
 
-            unsigned int    ReportToAzure;
+            unsigned int    ReportToCloud;
             
             unsigned int    SleepInterval;
 

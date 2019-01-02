@@ -8,6 +8,7 @@ PlotBotDevice devices[FLEET_SIZE];
 void InitializeDevices()
 {
         PlotBotDevice* _device = new PlotBotDevice();
+        _device->NodeType                   = PLATFORM_ARGON;
         _device->DeviceId                   = "e00fce68930b9e15c7b8139f";
         _device->DeviceName                 = "Rain-Argon";
         _device->ZipCode                    = 98272;
@@ -23,7 +24,7 @@ void InitializeDevices()
         _device->WundergroundPwsId          = "KWAMONRO71";
         _device->WundergroundPwsPassword    = "k3mjjpq6";
 
-        _device->ReportToAzure              = 1;
+        _device->ReportToCloud              = 1;
 
         _device->SleepInterval              = 0;
 
@@ -31,6 +32,7 @@ void InitializeDevices()
         fleet[_device->DeviceId]            = _device;
 
         _device = new PlotBotDevice();
+        _device->NodeType                   = PLATFORM_XENON;
         _device->DeviceId                   = "e00fce68c8e53c3766e107c9";
         _device->DeviceName                 = "Rain-Xenon-1";
         _device->ZipCode                    = 98272;
@@ -46,7 +48,7 @@ void InitializeDevices()
         _device->WundergroundPwsId          = "KWAMONRO84";
         _device->WundergroundPwsPassword    = "rzftmbdm";
 
-        _device->ReportToAzure              = 1;
+        _device->ReportToCloud              = 1;
 
         _device->SleepInterval              = 0;
         
@@ -54,6 +56,7 @@ void InitializeDevices()
         fleet[_device->DeviceId]            = _device;
     
         _device = new PlotBotDevice();
+        _device->NodeType                    = PLATFORM_XENON;
         _device->DeviceId                   = "e00fce683c178a3e19c2a424";
         _device->DeviceName                 = "Rain-Xenon-2";
         _device->ZipCode                    = 98272;
@@ -69,17 +72,18 @@ void InitializeDevices()
         _device->WundergroundPwsId          = "";
         _device->WundergroundPwsPassword    = "";
 
-        _device->ReportToAzure              = 1;
+        _device->ReportToCloud              = 1;
 
         _device->SleepInterval              = 0;
         
         _device->Button                     = BUTTON_C;
         fleet[_device->DeviceId]            = _device;
 
-    if (strcmp(System.deviceID(), "e00fce68930b9e15c7b8139f") == 0)
-        device = fleet[(std::string)System.deviceID()];
-    else if (strcmp(System.deviceID(), "e00fce68c8e53c3766e107c9") == 0)
-        device = fleet[(std::string)System.deviceID()];
-    else if (strcmp(System.deviceID(), "e00fce683c178a3e19c2a424") == 0)
-        device = fleet[(std::string)System.deviceID()];
+        device = fleet[System.deviceID()];
+    // if (strcmp(System.deviceID(), "e00fce68930b9e15c7b8139f") == 0)
+    //     device = fleet[(std::string)System.deviceID()];
+    // else if (strcmp(System.deviceID(), "e00fce68c8e53c3766e107c9") == 0)
+    //     device = fleet[(std::string)System.deviceID()];
+    // else if (strcmp(System.deviceID(), "e00fce683c178a3e19c2a424") == 0)
+    //     device = fleet[(std::string)System.deviceID()];
 }

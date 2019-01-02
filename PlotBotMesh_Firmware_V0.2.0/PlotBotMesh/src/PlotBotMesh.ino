@@ -4,7 +4,9 @@
 #include "Devices.h"
 #include "Instruments.h"
 #include "Serial.h"
-#include "Azure.h"
+#include "Cloud.h"
+
+#include <ArduinoJson.h>
 
 PlotBotDevice *device = new PlotBotDevice();
 
@@ -16,17 +18,17 @@ unsigned	displayDelay = 5000;
 char 		localTime[30];
 float 		battvolt = 0.0;
 
-std::map<std::string, PlotBotDevice*> fleet;
-std::map<std::string, std::string> events; 
+std::map<String, PlotBotDevice*> fleet;
+std::map<String, String> events; 
 
 #ifdef SSD1306_128x32x
 	#include <SSD1306_128x32.h>
 
 	#define OLED_RESET D4
-	SSD1306_128x32 display(OLED_RESET);
+	SSD1306_128x32 oledDisplay(OLED_RESET);
 
-	int button = 1;
-	int newbutton = 1;
+	int button = BUTTON_A;
+	int newbutton = button;
 #endif
 
 #ifdef DHT11
@@ -44,7 +46,7 @@ std::map<std::string, std::string> events;
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // 4-digit display
   ////////////////////////////////////////////////////////////////////////////////////////////////////
-	#include "TM1637Display.h"
+	#include "TM1637oledDisplay.h"
 
 	#define CLK D2
 	#define DIO D3
@@ -124,12 +126,12 @@ void setup()
 	#ifdef SSD1306_128x32x
 		Serial.println("OLED FeatherWing");
 		// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-		display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
+		oledDisplay.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
 		Serial.println("OLED begun");
 
 		// Clear the buffer.
-		display.clearDisplay();
-		display.display();
+		oledDisplay.clearDisplay();
+		oledDisplay.display();
 
 		pinMode(BUTTON_A, INPUT_PULLUP);
 		pinMode(BUTTON_B, INPUT_PULLUP);
@@ -159,11 +161,11 @@ void loop()
 
 	#ifdef SSD1306_128x32x
 	if(digitalRead(BUTTON_A) == LOW)
-		button = 1;
+		button = BUTTON_A;
 	if(digitalRead(BUTTON_B) == LOW)
-		button = 2;
+		button = BUTTON_B;
 	if(digitalRead(BUTTON_C) == LOW)
-		button = 3;
+		button = BUTTON_C;
 	#endif
 
 	#if PLATFORM_ID == PLATFORM_ARGON
@@ -173,7 +175,7 @@ void loop()
 	#endif
 	{
 		#ifdef SSD1306_128x32x
-			button = newbutton;
+			newbutton = button;
 		#endif
 
 		Serial.printlnf("");
@@ -187,9 +189,11 @@ void loop()
 		Serial.printf("\n%s\tcloudReady: %d, ", localTime, Particle.connected());
 		#if PLATFORM_ID == PLATFORM_ARGON
 			Serial.printf("wifiReady: %d, ", WiFi.ready());
-			Serial.printlnf("meshReady: %d", Mesh.ready());
+			Serial.printf("meshReady: %d, ", Mesh.ready());
+			Serial.printlnf("button: %d", button);
 		#elif PLATFORM_ID == PLATFORM_XENON
-			Serial.printlnf("meshReady: %d", Mesh.ready());
+			Serial.printf("meshReady: %d, ", Mesh.ready());
+			Serial.printlnf("button: %d", button);
 		#endif
 
 		Serial.println("\n*** Config Data:");
@@ -209,7 +213,7 @@ void loop()
 		Serial.printf("WunderGroundPwsiD: %s, ", device->WundergroundPwsId.c_str());
 		Serial.printlnf("WunderGroundPassword: %s", device->WundergroundPwsPassword.c_str());
 
-		Serial.printlnf("\tReportToAzure: %ld", device->ReportToAzure);
+		Serial.printlnf("\tReportToCloud: %ld", device->ReportToCloud);
 
 		Serial.printlnf("\tSleepInterval: %ld", device->SleepInterval);
 
@@ -241,34 +245,11 @@ void loop()
 		#endif
 
 		#ifdef SSD1306_128x32x
-			display.clearDisplay();
-			display.display();
-			display.setTextSize(2);
-			display.setTextColor(WHITE);
-			display.setCursor(0, 0);
-			char displayStr[100];
-			sprintf(displayStr, "T:%02d:%02d:%02d", h, m, s);
-			switch (button)
-			{
-				case 1:
-					sprintf(displayStr, "%sButton A", displayStr);
-					break;
-					
-				case 2:
-					sprintf(displayStr, "%sButton B", displayStr);
-					break;
-					
-				case 3:
-					sprintf(displayStr, "%sButton C", displayStr);        
-					break;
-			}
-			display.println(displayStr);
-			display.setCursor(0,0);
-			display.display(); // actually display all of the above
-		#endif  
+			DisplayEventData(button);
+		#endif 
 
-		if (device->ReportToAzure == 1)
-			sendInfoToAzure();
+		if (device->ReportToCloud == 1)
+			sendInfoToCloud();
 
 		startMillis = millis();
 	}
@@ -303,8 +284,72 @@ void loop()
 	Serial.begin(115200);
 }
 
-
+#ifdef SSD1306_128x32x
 void DisplayEventData(int button)
 {
+	String _deviceId = "";
+	PlotBotDevice* _device;
+	std::map<String, PlotBotDevice*>::iterator it = fleet.begin();
+	while (it !=fleet.end())
+	{
+		_device = it->second;
+		if (_device->Button == button)
+		{
+			_deviceId = it->first;
+			break;
+		}
+		it++;
+	}
 
-}
+	oledDisplay.clearDisplay();
+	oledDisplay.display();
+	oledDisplay.setTextSize(1);
+	oledDisplay.setTextColor(WHITE);
+	oledDisplay.setCursor(0, 0);
+
+	oledDisplay.printlnf("%s%s", Time.format(Time.now(), "%m/%d/%y %I:%M:%S").c_str(), Time.isAM() ? "am" : "pm");
+
+	if (_deviceId != "")		
+		{
+			oledDisplay.println(_device->DeviceName);
+			String dataIn = events[_device->DeviceId];
+			
+			if (_device->DeviceId != System.deviceID())
+			{
+				StaticJsonBuffer<1000> jsonBuffer;
+				char eventData[strlen(dataIn) + 1];
+				strcpy(eventData, dataIn.c_str());
+				JsonObject& root = jsonBuffer.parseObject(eventData);
+
+				Serial.println(dataIn.c_str());
+				Serial.println(eventData);
+
+				if (!root.success())
+				{
+					oledDisplay.println("JSON parse failed");
+					return;
+				}
+
+				float _battvolt = root["v"];
+				oledDisplay.printlnf("Voltage %.2f", _battvolt);
+
+				if (_device->NodeType == PLATFORM_XENON)
+				{		
+					float _tempf = root["tf"];
+					float _dewptf = root["dpf"];
+					int _humidity = root["h"];
+					oledDisplay.printlnf("TempF %.2f, Hum %d%%", _tempf, _humidity);
+				}
+			}
+			else
+			{
+				oledDisplay.printlnf("Voltage %.2f", battvolt);
+			}
+		}
+		else
+			oledDisplay.println("Device: not found");
+
+		oledDisplay.setCursor(0,0);
+		oledDisplay.display(); // actually display all of the above
+	}
+#endif  

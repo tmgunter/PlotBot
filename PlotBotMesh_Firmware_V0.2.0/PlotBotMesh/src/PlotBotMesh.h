@@ -19,9 +19,9 @@
     #endif
 
     #define FLEET_SIZE 10
-    extern std::map<std::string, PlotBotDevice*> fleet;
+    extern std::map<String, PlotBotDevice*> fleet;
     extern PlotBotDevice *device;
-    extern std::map<std::string, std::string> events;
+    extern std::map<String, String> events;
 
     #define BUTTON_A  4
     #define BUTTON_B  3

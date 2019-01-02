@@ -3,12 +3,12 @@
 
 #include "Devices.h"
 #include "Instruments.h"
-#include "Azure.h"
+#include "Cloud.h"
 #include <stdio.h>
 
 #include <ArduinoJson.h>
 
-void sendInfoToAzure()
+void sendInfoToCloud()
 {
 	Serial.println("\n*** Payload:");
 
@@ -39,14 +39,14 @@ void sendInfoToAzure()
 		char eventName[40];
 		if (Mesh.ready())
 		{
-			sprintf(eventName, "XenonData-%s", device->DeviceId);
+			sprintf(eventName, "XenonData-%s", device->DeviceId.c_str());
 			Mesh.publish(eventName, payload);
 		}
 		Serial.printlnf("\t%s: %s", eventName, payload);
 	#endif
 }
 
-void sendConfigToAzure()
+void sendConfigToCloud()
 {
  	// Big, old placeholder
 }
@@ -59,41 +59,10 @@ void XenonDataHandler(const char *event, const char *dataIn)
 		char *pos = std::strstr(event, "-");
 		if (pos)
 		{
-			std::string _deviceId(++pos);
-			std::string _data(dataIn);
+			String _deviceId(++pos);
+			String _data(dataIn);
 			events[_deviceId] = _data;
 		}
-		/*
-		char *data = new char[strlen(dataIn) + 1];
-		strcpy (data, dataIn);
-		
-		StaticJsonBuffer<1000> jsonBuffer;
-    	JsonObject& root = jsonBuffer.parseObject(data);
-
-		if (!root.success())
-		{
-			Serial.println("parseObject() failed");
-			return;
-		}
-
-    	const char* _deviceName = root["nm"];
-    	unsigned long _time = root["dt"];
-		float _battvolt = root["v"];
-    
-		Serial.printlnf("\tName: %s, Time: %s, BattVolt: %.2f", 
-				_deviceName, 
-				Time.format(_time, TIME_FORMAT_DEFAULT).c_str(), 
-				_battvolt);	
-
-		float _tempf = root["tf"];
-		float _dewptf = root["dpf"];
-		int _humidity = root["h"];
-
-		Serial.printlnf("\tTempF: %.2f, DewPtF: %.2f, Humidity: %d", 
-				_tempf, 
-				_dewptf, 
-				_humidity);	
-		*/
 	}
 #endif
 

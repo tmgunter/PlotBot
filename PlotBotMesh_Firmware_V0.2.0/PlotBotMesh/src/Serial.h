@@ -8,4 +8,9 @@
     void sendWeatherInfoToWU(PlotBotDevice *device);
 
     void printBatteryInfo();
+
+    #ifdef LightSensor
+    	void printLightInfo();
+    #endif
+
 #endif

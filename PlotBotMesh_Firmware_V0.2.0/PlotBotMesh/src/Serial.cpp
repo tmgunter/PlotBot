@@ -93,7 +93,15 @@ void printWeatherInfo()
 
 void printBatteryInfo()
 {
-    //This function prints the battery data out to the default Serial Port
-       Serial.println("\n*** Battery Data:");
+    Serial.println("\n*** Battery Data:");
     Serial.printlnf("\tbattvolt: %.2fV", battvolt);
 }
+
+#ifdef LightSensor
+    void printLightInfo()
+    {
+        Serial.println("\n*** Light Data:");
+        Serial.printf("\tlightValue: %d, ", lightValue);
+        Serial.printlnf("lightValueRaw: %d", lightValueRaw);
+    }
+#endif

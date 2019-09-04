@@ -17,14 +17,21 @@
         extern double dewptc;
     #endif
 
-    extern float            battvolt;
-    extern char             localTime[];
+     extern float            battvolt;
  
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Function Prototypes
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     int averageAnalogRead(int analogPin);
-    float dewPoint(float celsius, float humidity);
-    void calcWeatherInfo();
+        float dewPoint(float celsius, float humidity);
+
+    #ifdef DHT11
+        void calcWeatherInfo();
+    #endif
+
     void calcBatteryInfo();
+
+    #ifdef LightSensor
+        void calcLightInfo();
+    #endif
 #endif

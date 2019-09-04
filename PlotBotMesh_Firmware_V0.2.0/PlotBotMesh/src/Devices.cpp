@@ -12,8 +12,8 @@ void InitializeDevices()
         _device->DeviceId                   = "e00fce68930b9e15c7b8139f";
         _device->DeviceName                 = "Rain-Argon";
         _device->ZipCode                    = 98272;
-        _device->Latitude                   = 47.8562834;
-        _device->Longitude                  = -121.966498;
+        _device->Latitude                   = 47.85555;
+        _device->Longitude                  = -121.96772;
         _device->Elevation                  = 69;
 
         _device->ReportToThingSpeak         = 0;
@@ -32,36 +32,12 @@ void InitializeDevices()
         fleet[_device->DeviceId]            = _device;
 
         _device = new PlotBotDevice();
-        _device->NodeType                   = PLATFORM_XENON;
-        _device->DeviceId                   = "e00fce68c8e53c3766e107c9";
-        _device->DeviceName                 = "Rain-Xenon-1";
-        _device->ZipCode                    = 98272;
-        _device->Latitude                   = 47.8562834;
-        _device->Longitude                  = -121.966498;
-        _device->Elevation                  = 69;
-
-        _device->ReportToThingSpeak         = 0;
-        _device->ThingSpeakChannelNumber    = 524783;
-        _device->ThingSpeakWriteApiKey      = "0IBB8Y0SGUYV6AET";
-
-        _device->ReportToWunderground       = 0;
-        _device->WundergroundPwsId          = "KWAMONRO84";
-        _device->WundergroundPwsPassword    = "rzftmbdm";
-
-        _device->ReportToCloud              = 1;
-
-        _device->SleepInterval              = 0;
-        
-        _device->Button                     = BUTTON_B;
-        fleet[_device->DeviceId]            = _device;
-    
-        _device = new PlotBotDevice();
         _device->NodeType                    = PLATFORM_XENON;
         _device->DeviceId                   = "e00fce683c178a3e19c2a424";
-        _device->DeviceName                 = "Rain-Xenon-2";
+        _device->DeviceName                 = "Rain-Xenon-1";
         _device->ZipCode                    = 98272;
-        _device->Latitude                   = 47.8562834;
-        _device->Longitude                  = -121.966498;
+        _device->Latitude                   = 47.85555;
+        _device->Longitude                  = -121.96772;
         _device->Elevation                  = 69;
 
         _device->ReportToThingSpeak         = 0;
@@ -76,14 +52,32 @@ void InitializeDevices()
 
         _device->SleepInterval              = 0;
         
-        _device->Button                     = BUTTON_C;
+        _device->Button                     = BUTTON_B;
         fleet[_device->DeviceId]            = _device;
 
         device = fleet[System.deviceID()];
-    // if (strcmp(System.deviceID(), "e00fce68930b9e15c7b8139f") == 0)
-    //     device = fleet[(std::string)System.deviceID()];
-    // else if (strcmp(System.deviceID(), "e00fce68c8e53c3766e107c9") == 0)
-    //     device = fleet[(std::string)System.deviceID()];
-    // else if (strcmp(System.deviceID(), "e00fce683c178a3e19c2a424") == 0)
-    //     device = fleet[(std::string)System.deviceID()];
+
+        _device = new PlotBotDevice();
+        _device->NodeType                   = PLATFORM_XENON;
+        _device->DeviceId                   = "e00fce68c8e53c3766e107c9";
+        _device->DeviceName                 = "Rain-Xenon-2";
+        _device->ZipCode                    = 98272;
+        _device->Latitude                   = 47.85555;
+        _device->Longitude                  = -121.96772;
+        _device->Elevation                  = 69;
+
+        _device->ReportToThingSpeak         = 0;
+        _device->ThingSpeakChannelNumber    = 524783;
+        _device->ThingSpeakWriteApiKey      = "0IBB8Y0SGUYV6AET";
+
+        _device->ReportToWunderground       = 0;
+        _device->WundergroundPwsId          = "KWAMONRO84";
+        _device->WundergroundPwsPassword    = "rzftmbdm";
+
+        _device->ReportToCloud              = 1;
+
+        _device->SleepInterval              = 0;
+        
+        _device->Button                     = BUTTON_C;
+        fleet[_device->DeviceId]            = _device;
 }

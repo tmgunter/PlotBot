@@ -31,6 +31,11 @@ std::map<String, String> events;
 	int newbutton = button;
 #endif
 
+#ifdef LightSensor
+	int lightValue = 0;
+	int lightValueRaw = 0;
+#endif
+
 #ifdef DHT11
 	#define DHTPIN 	D4     // set pin
 	DHT dht(DHTPIN);
@@ -46,7 +51,7 @@ std::map<String, String> events;
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // 4-digit display
   ////////////////////////////////////////////////////////////////////////////////////////////////////
-	#include "TM1637oledDisplay.h"
+	#include "TM1637Display.h"
 
 	#define CLK D2
 	#define DIO D3
@@ -54,7 +59,7 @@ std::map<String, String> events;
 	TM1637Display displayTime(CLK, DIO);
 #endif
 
-#ifdef CHAINABLE_LED
+#ifdef Chainable_LED
 	#include "ChainableLED.h"
 
 	#define NUM_LEDS 1
@@ -100,6 +105,10 @@ void setup()
     pinMode(ledActivityPin, OUTPUT);
 	pinMode(BATT, INPUT);
 
+	#ifdef LightSensor
+		pinMode(LightSensorPin, INPUT);
+	#endif
+
 	#ifdef DHT11
 		// Create Particle.variables for each piece of data for easy access
 		dht.begin();
@@ -138,7 +147,7 @@ void setup()
 		pinMode(BUTTON_C, INPUT_PULLUP);
 	#endif
 
-	#ifdef CHAINABLE_LED
+	#ifdef Chainable_LED
 		leds.init();
 	#endif
 }
@@ -148,16 +157,6 @@ void loop()
 	digitalWrite(ledActivityPin, HIGH);
 	delay(250);
 	digitalWrite(ledActivityPin, LOW);
-
-	int h = Time.hourFormat12();
-	int m = Time.minute();
-	int s = Time.second();
-	char ampm[5];
-	if (Time.isAM())
-		strcpy(ampm, "am");
-	else
-		strcpy(ampm, "pm");
-	sprintf(localTime, "%02d/%02d/%02d %02d:%02d:%02d%s", Time.month(), Time.day(), Time.year(), h, m, s, ampm);
 
 	#ifdef SSD1306_128x32x
 	if(digitalRead(BUTTON_A) == LOW)
@@ -193,7 +192,7 @@ void loop()
 			Serial.printlnf("button: %d", button);
 		#elif PLATFORM_ID == PLATFORM_XENON
 			Serial.printf("meshReady: %d, ", Mesh.ready());
-			Serial.printlnf("button: %d", button);
+			//Serial.printlnf("button: %d", button);
 		#endif
 
 		Serial.println("\n*** Config Data:");
@@ -222,15 +221,21 @@ void loop()
 		calcBatteryInfo();
 		printBatteryInfo();
 
+		#ifdef LightSensor
+			calcLightInfo();
+			printLightInfo();
+		#endif
+
 		#ifdef DHT11
 			calcWeatherInfo();
 			printWeatherInfo();
 		#endif
 
 		#ifdef TM1637Displayx
+			displayTime.setBrightness(lightValue);
 			if (bTime)
 			{
-				int num = (h * 100) + m;
+				int num = (Time.hourFormat12() * 100) + Time.minute();
 				displayTime.showNumberDecEx(num, 0b01000000, true, 4, 0);
 				bTime = false;
 			}
@@ -254,7 +259,7 @@ void loop()
 		startMillis = millis();
 	}
 
-#ifdef CHAINABLE_LED
+#ifdef Chainable_LED
 	for (byte i = 0; i < NUM_LEDS; i++)
 		leds.setColorHSB(i, hue, 1.0, .025);
     
@@ -289,6 +294,8 @@ void DisplayEventData(int button)
 {
 	String _deviceId = "";
 	PlotBotDevice* _device;
+	char str[132];
+
 	std::map<String, PlotBotDevice*>::iterator it = fleet.begin();
 	while (it !=fleet.end())
 	{
@@ -307,11 +314,12 @@ void DisplayEventData(int button)
 	oledDisplay.setTextColor(WHITE);
 	oledDisplay.setCursor(0, 0);
 
-	oledDisplay.printlnf("%s%s", Time.format(Time.now(), "%m/%d/%y %I:%M:%S").c_str(), Time.isAM() ? "am" : "pm");
+	sprintf(str, "%s%s", Time.format(Time.now(), "%m/%d/%y %I:%M:%S").c_str(), Time.isAM() ? "am" : "pm");
+	oledDisplay.print(str);
 
 	if (_deviceId != "")		
 		{
-			oledDisplay.println(_device->DeviceName);
+			oledDisplay.print(_device->DeviceName);
 			String dataIn = events[_device->DeviceId];
 			
 			if (_device->DeviceId != System.deviceID())
@@ -326,28 +334,32 @@ void DisplayEventData(int button)
 
 				if (!root.success())
 				{
-					oledDisplay.println("JSON parse failed");
+					oledDisplay.print("JSON parse failed");
 					return;
 				}
 
 				float _battvolt = root["v"];
-				oledDisplay.printlnf("Voltage %.2f", _battvolt);
+				sprintf(str, "Voltage %.2f", _battvolt);
+				oledDisplay.print(str);
 
 				if (_device->NodeType == PLATFORM_XENON)
 				{		
 					float _tempf = root["tf"];
 					float _dewptf = root["dpf"];
 					int _humidity = root["h"];
-					oledDisplay.printlnf("TempF %.2f, Hum %d%%", _tempf, _humidity);
+					
+					sprintf(str, "TempF %.2f, Hum %d%%", _tempf, _humidity);
+					oledDisplay.print(str);
 				}
 			}
 			else
 			{
-				oledDisplay.printlnf("Voltage %.2f", battvolt);
+				sprintf(str, "Voltage %.2f", battvolt);
+				oledDisplay.print(str);
 			}
 		}
 		else
-			oledDisplay.println("Device: not found");
+			oledDisplay.print("Device: not found");
 
 		oledDisplay.setCursor(0,0);
 		oledDisplay.display(); // actually display all of the above

@@ -1,1 +1,5 @@
-{}
+{
+    "particle.targetDevice": "Rain-Argon-1",
+    "particle.firmwareVersion": "1.2.1-rc.1",
+    "particle.targetPlatform": "argon"
+}

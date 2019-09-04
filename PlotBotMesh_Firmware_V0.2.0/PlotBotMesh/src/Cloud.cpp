@@ -34,6 +34,12 @@ void sendInfoToCloud()
 						(int)humidity);
 			}
 		#endif
+		#ifdef LightSensor
+			sprintf(payload, 
+				"%s\"l\":%d,",
+				payload,
+				lightValueRaw);
+		#endif
 		sprintf(payload, "%s\"v\":%.2f}", payload, battvolt);	
 
 		char eventName[40];

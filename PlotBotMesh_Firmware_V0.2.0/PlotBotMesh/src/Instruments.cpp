@@ -59,3 +59,11 @@ void calcBatteryInfo()
 {
 	battvolt = (float)((float)averageAnalogRead(BATT) / 1000.0);
 }
+
+#ifdef LightSensor
+	void calcLightInfo()
+	{
+		lightValueRaw = averageAnalogRead(LightSensorPin);
+		lightValue = map(lightValueRaw, 0, 1000, 0, 8);
+	}
+#endif

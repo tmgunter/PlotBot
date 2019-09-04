@@ -44,7 +44,8 @@
         },
         "particle.targetPlatform": "argon",
         "particle.firmwareVersion": "0.8.0-rc.27",
-        "particle.targetDevice": "Rain-Argon"
+        "particle.targetDevice": "Rain-Argon-1",
+        "cortex-debug.openocdPath": "C:\\Users\\danamont\\.particle\\toolchains\\openocd\\0.10.0-particle.1\\bin\\openocd.exe"
     },
     "folders": [
         {
